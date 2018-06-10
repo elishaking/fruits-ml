@@ -1,0 +1,7 @@
+data/
+.vscode/
+.idea/
+model/
+models/
+saved_models/
+tf_logs/
