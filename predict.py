@@ -7,12 +7,12 @@ from keras.utils.generic_utils import CustomObjectScope
 from matplotlib import pyplot as plt
 import numpy as np
 
-test_path = 'data/test'
-# model = load_model('saved_models/bottle_vs_pen_20.h5')
+test_path = 'data/train'
+
 with CustomObjectScope(
         {'relu6': keras.applications.mobilenet.relu6, 'DepthwiseConv2D': keras.applications.mobilenet.DepthwiseConv2D}):
-    model = load_model('saved_models/fruits_2_5_20.h5')
-    # model.summary()
+    model = load_model('saved_models/fruits_2_5_40_40_100_200.h5')
+# model.summary()
 
 
 def plots(ims, figsize=(12, 6), rows=1, interp=False, titles=None):
@@ -45,6 +45,9 @@ test_batches = ImageDataGenerator(preprocessing_function=preprocess_input).flow_
 )
 
 test_labels = test_batches.classes
+test_classes = [cls for cls in test_batches.class_indices]
+print(test_classes)
+
 predictions = model.predict_generator(test_batches, steps=1, verbose=0)
 
 # predictions = [[0.8665099, 0.1334901],
@@ -64,15 +67,19 @@ prediction_confidence = []
 actual_label = []
 i = 0
 for prediction in predictions:
-    if prediction[0] > prediction[1]:
-        prediction_classes.append('bottle')
-        prediction_confidence.append(prediction[0] * 100)
-    else:
-        prediction_classes.append('pen')
-        prediction_confidence.append(prediction[1] * 100)
-
-    actual_label.append('bottle' if test_labels[i] == 0 else 'cat')
-    i += 1
+    highest_conf = max(prediction)
+    prediction_classes.append(test_classes[prediction.tolist().index(highest_conf)])
+    prediction_confidence.append(highest_conf)
+    actual_label.append(test_classes[test_labels[i]])
+    # if prediction[0] > prediction[1]:
+    #     prediction_classes.append('bottle')
+    #     prediction_confidence.append(prediction[0] * 100)
+    # else:
+    #     prediction_classes.append('pen')
+    #     prediction_confidence.append(prediction[1] * 100)
+    #
+    # actual_label.append('bottle' if test_labels[i] == 0 else 'cat')
+    # i += 1
 
 for i in range(len(prediction_classes)):
     print('class:', prediction_classes[i], 'conf:', prediction_confidence[i], 'label:', actual_label[i], sep=' ')
