@@ -6,6 +6,7 @@ from keras.utils.generic_utils import CustomObjectScope
 
 from matplotlib import pyplot as plt
 import numpy as np
+from sklearn.metrics import confusion_matrix
 
 test_path = 'data/train'
 
@@ -35,20 +36,23 @@ def plots(ims, figsize=(12, 6), rows=1, interp=False, titles=None):
         plt.imshow(ims[j], interpolation=None if interp else 'none')
 
 
-# test_imgs, test_labels = next(test_batches)
-# plots(test_imgs, titles=test_labels)
 test_batches = ImageDataGenerator(preprocessing_function=preprocess_input).flow_from_directory(
     test_path,
     target_size=(224, 224),
-    batch_size=9,
-    shuffle=False
+    batch_size=10,
+    shuffle=True
 )
 
-test_labels = test_batches.classes
-test_classes = [cls for cls in test_batches.class_indices]
-print(test_classes)
+test_imgs, test_labels = next(test_batches)
+# plots(test_imgs, titles=test_labels)
+
+# test_labels = test_batches.classes
+# test_classes = [cls for cls in test_batches.class_indices]
+# print(test_classes)
 
 predictions = model.predict_generator(test_batches, steps=1, verbose=0)
+cm = confusion_matrix(test_labels[:, 0], np.round(predictions[:, 0]))
+print(cm)
 
 # predictions = [[0.8665099, 0.1334901],
 #                [0.8632469, 0.1367531],
@@ -61,25 +65,17 @@ predictions = model.predict_generator(test_batches, steps=1, verbose=0)
 #                [0.58947843, 0.4105216]]
 #
 # test_labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-prediction_classes = []
-prediction_confidence = []
-actual_label = []
-i = 0
-for prediction in predictions:
-    highest_conf = max(prediction)
-    prediction_classes.append(test_classes[prediction.tolist().index(highest_conf)])
-    prediction_confidence.append(highest_conf)
-    actual_label.append(test_classes[test_labels[i]])
-    # if prediction[0] > prediction[1]:
-    #     prediction_classes.append('bottle')
-    #     prediction_confidence.append(prediction[0] * 100)
-    # else:
-    #     prediction_classes.append('pen')
-    #     prediction_confidence.append(prediction[1] * 100)
-    #
-    # actual_label.append('bottle' if test_labels[i] == 0 else 'cat')
-    # i += 1
-
-for i in range(len(prediction_classes)):
-    print('class:', prediction_classes[i], 'conf:', prediction_confidence[i], 'label:', actual_label[i], sep=' ')
+#
+# prediction_classes = []
+# prediction_confidence = []
+# actual_label = []
+# i = 0
+# print(len(predictions))
+# for prediction in predictions:
+#     highest_conf = max(prediction)
+#     prediction_classes.append(test_classes[prediction.tolist().index(highest_conf)])
+#     prediction_confidence.append(highest_conf)
+#     actual_label.append(test_classes[test_labels[i]])
+#
+# for i in range(len(prediction_classes)):
+#     print('class:', prediction_classes[i], 'conf:', prediction_confidence[i], 'label:', actual_label[i], sep=' ')

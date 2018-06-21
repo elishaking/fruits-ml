@@ -40,16 +40,16 @@ else:
     x = mobilenet_model.layers[-6].output
     predictions = Dense(64, activation='softmax')(x)
     model = Model(inputs=mobilenet_model.input, outputs=predictions)
-# model.summary()
+model.summary()
 
 # freeze all layers except the last 22
-for layer in model.layers[: -23]:
+for layer in model.layers[: -41]:
     layer.trainable = False
 
 # compile model
 model.compile(Adam(lr=.0001), loss='categorical_crossentropy', metrics=['accuracy'])
 
 model.fit_generator(train_batches, steps_per_epoch=42, validation_data=valid_batches,
-                    validation_steps=14, epochs=200, verbose=2)
+                    validation_steps=14, epochs=40, verbose=2)
 
 model.save('saved_models/fruits_40.h5')
