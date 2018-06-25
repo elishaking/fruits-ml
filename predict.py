@@ -12,7 +12,7 @@ test_path = 'data/train'
 
 with CustomObjectScope(
         {'relu6': keras.applications.mobilenet.relu6, 'DepthwiseConv2D': keras.applications.mobilenet.DepthwiseConv2D}):
-    model = load_model('saved_models/fruits_2_5_40_40_100_200.h5')
+    model = load_model('saved_models/mobilenet/fruits_2_5_30.h5')
 # model.summary()
 
 
@@ -50,7 +50,7 @@ test_imgs, test_labels = next(test_batches)
 # test_classes = [cls for cls in test_batches.class_indices]
 # print(test_classes)
 
-predictions = model.predict_generator(test_batches, steps=1, verbose=0)
+predictions = model.predict_generator(test_batches, steps=84, verbose=0)
 cm = confusion_matrix(test_labels[:, 0], np.round(predictions[:, 0]))
 print(cm)
 

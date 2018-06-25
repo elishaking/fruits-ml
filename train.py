@@ -6,6 +6,7 @@ from keras.applications.mobilenet import preprocess_input
 
 from keras import Model
 from keras.applications.mobilenet import MobileNet
+from keras.applications.xception import Xception
 from keras.layers import Dense
 
 from keras.optimizers import Adam
@@ -26,30 +27,50 @@ valid_batches = ImageDataGenerator(preprocessing_function=preprocess_input).flow
     batch_size=10
 )
 
-fine_tune = False
-if fine_tune:
-    with CustomObjectScope(
-            {'relu6': keras.applications.mobilenet.relu6,
-             'DepthwiseConv2D': keras.applications.mobilenet.DepthwiseConv2D}):
-        model = load_model('saved_models/fruits_40.h5')
-else:
-    mobilenet_model = MobileNet()
-    # mobilenet_model.summary()
 
-    # replace last 5 layers with 'predictions' layer
-    x = mobilenet_model.layers[-6].output
-    predictions = Dense(64, activation='softmax')(x)
-    model = Model(inputs=mobilenet_model.input, outputs=predictions)
+def get_model(name='mobilenet', n_classes=1000, n_layers_to_remove=0, fine_tune=False, model_path="./"):
+    if fine_tune:
+        if name == 'mobilenet':
+            with CustomObjectScope(
+                    {'relu6': keras.applications.mobilenet.relu6,
+                     'DepthwiseConv2D': keras.applications.mobilenet.DepthwiseConv2D}):
+                model = load_model(model_path)
+        else:
+            model = load_model(model_path)
+    else:
+        if name == 'mobilenet':
+            o_model = MobileNet(alpha=0.25)
+        else:
+            o_model = Xception()
+
+        o_model.summary()
+
+        # replace last n layers with 'predictions' layer
+        x = o_model.layers[-n_layers_to_remove - 1].output
+        predictions = Dense(n_classes, activation='softmax')(x)
+        model = Model(inputs=o_model.input, outputs=predictions)
+
+    return model
+
+
+def freeze_model_layers(model, n_layers):
+    # freeze all layers except the last n
+    for layer in model.layers[: (-n_layers - 1)]:
+        layer.trainable = False
+
+    return model
+
+
+model = get_model('mobilenet', n_classes=2, n_layers_to_remove=5)
+# model = get_model('xception')
 model.summary()
+model = freeze_model_layers(model, 7)
 
-# freeze all layers except the last 22
-for layer in model.layers[: -41]:
-    layer.trainable = False
 
 # compile model
 model.compile(Adam(lr=.0001), loss='categorical_crossentropy', metrics=['accuracy'])
 
-model.fit_generator(train_batches, steps_per_epoch=42, validation_data=valid_batches,
-                    validation_steps=14, epochs=40, verbose=2)
+model.fit_generator(train_batches, steps_per_epoch=84, validation_data=valid_batches,
+                    validation_steps=28, epochs=30, verbose=2)
 
-model.save('saved_models/fruits_40.h5')
+model.save('saved_models/mobilenet/fruits_2_5_30.h5')
