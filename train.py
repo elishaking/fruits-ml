@@ -63,7 +63,8 @@ def freeze_model_layers(model, n_layers):
     return model
 
 
-model = get_model('mobilenet', n_classes=64, n_layers_to_remove=5)
+model = get_model('mobilenet', n_classes=64, n_layers_to_remove=5,
+                  fine_tune=True, model_path='saved_models/mobilenet/fruits_2_5_10_10.h5')
 # model = get_model('xception')
 model.summary()
 model = freeze_model_layers(model, 7)
@@ -80,4 +81,4 @@ model.fit_generator(train_batches, steps_per_epoch=420, validation_data=valid_ba
 t = time.time() - t0
 print('total time:', t)
 
-model.save('saved_models/mobilenet/fruits_2_5_10.h5')
+model.save('saved_models/mobilenet/fruits_2_5_10_10_10.h5')
