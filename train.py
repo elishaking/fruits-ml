@@ -11,6 +11,8 @@ from keras.layers import Dense
 
 from keras.optimizers import Adam
 
+import time
+
 # prepare data
 train_path = 'data/train'
 valid_path = 'data/valid'
@@ -18,13 +20,13 @@ valid_path = 'data/valid'
 train_batches = ImageDataGenerator(preprocessing_function=preprocess_input).flow_from_directory(
     train_path,
     target_size=(224, 224),
-    batch_size=10
+    batch_size=64
 )
 
 valid_batches = ImageDataGenerator(preprocessing_function=preprocess_input).flow_from_directory(
     valid_path,
     target_size=(224, 224),
-    batch_size=10
+    batch_size=64
 )
 
 
@@ -61,7 +63,7 @@ def freeze_model_layers(model, n_layers):
     return model
 
 
-model = get_model('mobilenet', n_classes=2, n_layers_to_remove=5)
+model = get_model('mobilenet', n_classes=64, n_layers_to_remove=5)
 # model = get_model('xception')
 model.summary()
 model = freeze_model_layers(model, 7)
@@ -70,7 +72,12 @@ model = freeze_model_layers(model, 7)
 # compile model
 model.compile(Adam(lr=.0001), loss='categorical_crossentropy', metrics=['accuracy'])
 
-model.fit_generator(train_batches, steps_per_epoch=84, validation_data=valid_batches,
-                    validation_steps=28, epochs=30, verbose=2)
+t0 = time.time()
 
-model.save('saved_models/mobilenet/fruits_2_5_30.h5')
+model.fit_generator(train_batches, steps_per_epoch=420, validation_data=valid_batches,
+                    validation_steps=140, epochs=200, verbose=2)
+
+t = time.time() - t0
+print('total time:', t)
+
+model.save('saved_models/mobilenet/fruits_2_5_200.h5')

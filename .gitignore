@@ -5,3 +5,4 @@ model/
 models/
 saved_models/
 tf_logs/
+train_logs/
